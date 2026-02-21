@@ -11,20 +11,24 @@ const apiClient = axios.create({
 
 // Request interceptor
 apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+  (config: any) => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
+
     console.log('🚀 [API Request]', {
       method: config.method?.toUpperCase(),
       url: config.url,
       baseURL: config.baseURL,
-      data: config.data
+      data: config.data,
     });
+
     return config;
   },
-  (error) => {
+  (error: any) => {
     console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
@@ -32,39 +36,39 @@ apiClient.interceptors.request.use(
 
 // Response interceptor
 apiClient.interceptors.response.use(
-  (response) => {
+  (response: any) => {
     console.log('✅ [API Response]', {
       status: response.status,
-      data: response.data
+      data: response.data,
     });
     return response;
   },
-  async (error) => {
+  async (error: any) => {
     console.error('❌ [API Error Full]', {
-      message: error.message,
-      code: error.code,
-      response: error.response?.data,
-      status: error.response?.status,
-      headers: error.response?.headers,
+      message: error?.message,
+      code: error?.code,
+      response: error?.response?.data,
+      status: error?.response?.status,
+      headers: error?.response?.headers,
       config: {
-        url: error.config?.url,
-        method: error.config?.method,
-        baseURL: error.config?.baseURL,
-        data: error.config?.data
-      }
+        url: error?.config?.url,
+        method: error?.config?.method,
+        baseURL: error?.config?.baseURL,
+        data: error?.config?.data,
+      },
     });
 
-    if (error.code === 'ERR_NETWORK') {
+    if (error?.code === 'ERR_NETWORK') {
       console.error('Network error - backend might be down or CORS issue');
     }
 
-    if (error.response?.status === 401) {
+    if (error?.response?.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('accessToken');
         window.location.href = '/auth/login';
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
