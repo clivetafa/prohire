@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import axiosInstance from '@/lib/api/axios';
-import { AxiosError } from 'axios';
 
 interface User {
   id: string;
@@ -26,23 +25,26 @@ interface UseAuthOptions {
 
 // Fetcher function for SWR
 const fetcher = async (url: string): Promise<User> => {
-  const response = await axiosInstance.get(url);
-  return response.data.data;
+  const response: any = await axiosInstance.get(url);
+  return response?.data?.data;
 };
 
 export function useAuth(options?: UseAuthOptions) {
   const router = useRouter();
   const { middleware, redirectIfAuthenticated } = options || {};
 
-  const { data: user, error, mutate } = useSWR<User>('/auth/me', fetcher, {
-    revalidateOnFocus: false,
-    shouldRetryOnError: false,
-  });
+  const { data: user, error, mutate } = useSWR<User>(
+    '/auth/me',
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+    }
+  );
 
   useEffect(() => {
     if (middleware === 'guest' && redirectIfAuthenticated && user) {
-      // Redirect based on role
-      switch(user.role) {
+      switch (user.role) {
         case 'ADMIN':
           router.push('/dashboard/admin');
           break;
@@ -59,19 +61,22 @@ export function useAuth(options?: UseAuthOptions) {
     }
   }, [user, error, middleware, redirectIfAuthenticated, router]);
 
-  const login = async (email: string, password: string): Promise<LoginResponse> => {
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<LoginResponse> => {
     try {
-      const response = await axiosInstance.post('/auth/login', {
+      const response: any = await axiosInstance.post('/auth/login', {
         email,
         password,
       });
+
       await mutate();
-      return { success: true, data: response.data };
-    } catch (error: unknown) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      return { 
-        success: false, 
-        error: axiosError.response?.data?.message || 'Login failed' 
+      return { success: true, data: response?.data };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.response?.data?.message || 'Login failed',
       };
     }
   };
@@ -84,13 +89,16 @@ export function useAuth(options?: UseAuthOptions) {
 
   const register = async (userData: any): Promise<LoginResponse> => {
     try {
-      const response = await axiosInstance.post('/auth/register', userData);
-      return { success: true, data: response.data };
-    } catch (error: unknown) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      return { 
-        success: false, 
-        error: axiosError.response?.data?.message || 'Registration failed' 
+      const response: any = await axiosInstance.post(
+        '/auth/register',
+        userData
+      );
+
+      return { success: true, data: response?.data };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.response?.data?.message || 'Registration failed',
       };
     }
   };
