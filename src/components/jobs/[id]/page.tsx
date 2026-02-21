@@ -69,7 +69,7 @@ export default function JobDetailPage() {
         {/* Job header */}
         <div className="bg-gray-800 rounded-xl p-8 border border-gray-700 mb-6">
           <h1 className="text-3xl font-bold text-white mb-4">{job.title}</h1>
-          
+
           <div className="flex flex-wrap gap-4 mb-6">
             <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
               {job.type.replace('_', ' ')}
@@ -84,17 +84,20 @@ export default function JobDetailPage() {
               <MapPinIcon className="h-5 w-5 text-gray-400 mr-2" />
               {job.location}
             </div>
+
             <div className="flex items-center text-gray-300">
               <CurrencyDollarIcon className="h-5 w-5 text-gray-400 mr-2" />
               ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}
             </div>
+
             <div className="flex items-center text-gray-300">
               <BriefcaseIcon className="h-5 w-5 text-gray-400 mr-2" />
               Posted by {job.employer.firstName} {job.employer.lastName}
             </div>
+
             <div className="flex items-center text-gray-300">
               <AcademicCapIcon className="h-5 w-5 text-gray-400 mr-2" />
-              {job._count.applications} applicant(s)
+              {job._count?.applications ?? 0} applicant(s)
             </div>
           </div>
 
