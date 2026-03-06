@@ -1,72 +1,54 @@
-import axios from 'axios';
+import axios from "axios";
+
+const IS_DEV = process.env.NODE_ENV === "development";
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
+  headers: { "Content-Type": "application/json" },
   withCredentials: true,
-  timeout: 10000,
+  timeout: 60000,
 });
 
-// Request interceptor
+// ── Request interceptor ─────────────────────────────
 apiClient.interceptors.request.use(
-  (config: any) => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('accessToken');
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+  (config) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("accessToken");
+      if (token) config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
     }
-
-    console.log('🚀 [API Request]', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      baseURL: config.baseURL,
-      data: config.data,
-    });
-
+    if (IS_DEV) console.log("🚀 [API Request]", config);
     return config;
   },
-  (error: any) => {
-    console.error('Request interceptor error:', error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor
+// ── Response interceptor ────────────────────────────
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 3000;
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 apiClient.interceptors.response.use(
-  (response: any) => {
-    console.log('✅ [API Response]', {
-      status: response.status,
-      data: response.data,
-    });
+  (response) => {
+    if (IS_DEV) console.log("✅ [API Response]", response);
     return response;
   },
-  async (error: any) => {
-    console.error('❌ [API Error Full]', {
-      message: error?.message,
-      code: error?.code,
-      response: error?.response?.data,
-      status: error?.response?.status,
-      headers: error?.response?.headers,
-      config: {
-        url: error?.config?.url,
-        method: error?.config?.method,
-        baseURL: error?.config?.baseURL,
-        data: error?.config?.data,
-      },
-    });
+  async (error) => {
+    const config = error.config;
+    const isTimeout = error.code === "ECONNABORTED" || error.message?.includes("timeout");
+    const isNetworkError = error.code === "ERR_NETWORK" || !error.response;
 
-    if (error?.code === 'ERR_NETWORK') {
-      console.error('Network error - backend might be down or CORS issue');
+    if ((isTimeout || isNetworkError) && config) {
+      config._retryCount = config._retryCount ?? 0;
+      if (config._retryCount < MAX_RETRIES) {
+        config._retryCount += 1;
+        await sleep(RETRY_DELAY_MS);
+        return apiClient(config);
+      }
     }
 
-    if (error?.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-        window.location.href = '/auth/login';
-      }
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("accessToken");
+      window.location.href = "/auth/login";
     }
 
     return Promise.reject(error);
