@@ -1,3 +1,6 @@
+// =============================
+// Generic API Response Wrapper
+// =============================
 export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
@@ -15,6 +18,9 @@ export interface ApiResponse<T = any> {
   };
 }
 
+// =============================
+// User Types
+// =============================
 export interface User {
   id: string;
   email: string;
@@ -27,6 +33,9 @@ export interface User {
   updatedAt?: string;
 }
 
+// =============================
+// Auth Response Types
+// =============================
 export interface LoginResponse {
   success: boolean;
   accessToken?: string;
@@ -49,6 +58,9 @@ export interface RegisterResponse {
   };
 }
 
+// =============================
+// Job Types
+// =============================
 export interface Job {
   id: string;
   title: string;
@@ -77,12 +89,6 @@ export interface Job {
   };
 }
 
-export interface JobsResponse {
-  success: boolean;
-  data?: Job[];
-  jobs?: Job[];
-}
-
 // =============================
 // Application Types
 // =============================
@@ -98,12 +104,6 @@ export interface Application {
   updatedAt: string;
   job?: Job;
   candidate?: User;
-}
-
-export interface ApplicationsResponse {
-  success: boolean;
-  data?: Application[];
-  applications?: Application[];
 }
 
 // =============================
@@ -155,10 +155,4 @@ export interface DashboardStats {
       applications: number;
     };
   }>;
-}
-
-export interface DashboardStatsResponse {
-  success: boolean;
-  data?: DashboardStats;
-  stats?: DashboardStats;
 }
